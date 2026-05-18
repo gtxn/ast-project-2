@@ -1,15 +1,27 @@
-Docker build
+## Docker build
 ```
-docker build --platform linux/amd64 -t theosotr/sqlite3-reducer .
+docker build --pull --platform linux/amd64 -t ast-reducer .
 ```
 
-Docker run
+## Docker run reducer
 ```
-docker run --rm \                                                
+docker run --rm \
   --platform linux/amd64 \
   -v "$PWD/queries/query1:/work" \
   -w /work \
-  theosotr/sqlite3-reducer \
+  ast-reducer \
   --query original_test.sql \
   --test test.sh
 ```
+
+## Run ALL queries with Docker
+```
+docker build --pull --platform linux/amd64 -t ast-reducer .
+docker run --rm \
+  --platform linux/amd64 \
+  -v "$PWD/queries:/opt/reducer/queries" \
+  --entrypoint /usr/bin/run-all-queries \
+  ast-reducer
+```
+
+The batch script writes each reduced result to `queries/query*/query.sql`.

@@ -11,16 +11,19 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /opt/reducer
 
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
+RUN pip3 install --break-system-packages -r requirements.txt
 
 COPY sqlite_reducer/ /opt/reducer/sqlite_reducer/
 COPY queries/ /opt/reducer/queries/
 COPY reducer.py /opt/reducer/reducer.py
+COPY run_all_queries.sh /opt/reducer/run_all_queries.sh
 
 ENV PYTHONPATH=/opt/reducer
 
 RUN printf '#!/bin/sh\nexec python3 /opt/reducer/reducer.py "$@"\n' \
     > /usr/bin/reducer && chmod +x /usr/bin/reducer
+RUN chmod +x /opt/reducer/run_all_queries.sh && \
+    ln -sf /opt/reducer/run_all_queries.sh /usr/bin/run-all-queries
 
 ENTRYPOINT ["/usr/bin/reducer"]
 CMD []
