@@ -1,10 +1,13 @@
 import os
+import sqlite3
 import subprocess
 import tempfile
 from sqlglot.tokens import Tokenizer
-from sqlglot import parse
+from sqlglot import parse, exp
 
 def run_oracle(candidate_sql: str, oracle_script: str) -> bool:
+  oracle_script = os.path.abspath(oracle_script)
+
   with tempfile.TemporaryDirectory() as tmpdir:
     candidate_path = os.path.join(tmpdir, "query.sql")
 
@@ -50,8 +53,6 @@ def delta_debug(parts: list[str], oracle_script: str, delimitter:str=' ') -> lis
         break
       n = min(len(parts), n * 2)
 
-  print('delta debug stats\n')
-  print(f'prev part len: {prev_parts_len} | curr part len: {len(parts)}')
   return parts
 
 # Parse SQL
@@ -59,12 +60,45 @@ def parse_sql(sql_stmt: str) -> list:
   statements = parse(sql_stmt)
   return statements
   
+# Get tables involved in the statement
+def get_tables(stmt: str) -> list[str]:
+  tables = []
+
+  for parsed_stmt in parse_sql(stmt):
+    cte_names = {cte.alias for cte in parsed_stmt.find_all(exp.CTE)}
+
+    for table in parsed_stmt.find_all(exp.Table):
+      if table.name and table.name not in cte_names:
+        tables.append(table.name)
+
+  return list(dict.fromkeys(tables))
+  
 # Splitting and Unsplitting
 def split_stmts(sql: str) -> list[str]:
-  stmt_arr =  sql.split(';')
-  stmt_arr = [s.strip() for s in stmt_arr]
-  
-  return stmt_arr
+  stmts = []
+  current = []
+
+  for char in sql:
+    current.append(char)
+    stmt = "".join(current)
+
+    if sqlite3.complete_statement(stmt):
+      stmt = stmt.strip()
+
+      if stmt.endswith(";"):
+        stmt = stmt[:-1].rstrip()
+
+      if stmt:
+        stmts.append(stmt)
+
+      current = []
+
+  tail = "".join(current).strip()
+
+  if tail:
+    stmts.append(tail)
+
+  return stmts
 
 def unsplit_stmts(tokens: list[str]) -> str:
   return ";\n".join(tokens)
