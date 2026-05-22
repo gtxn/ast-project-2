@@ -7,6 +7,7 @@ from sqlite_reducer.delta_reduce import delta_statement_reducer, delta_token_red
 from sqlite_reducer.statement_reduce import statement_reducer
 from sqlite_reducer.expression_reduce import expression_reduce
 from sqlite_reducer.where_reduce import where_condition_reduce
+from sqlite_reducer.select_reduce import select_reduce
 
 # Statement goes through these reducers in order
 REDUCERS = [
@@ -16,6 +17,8 @@ REDUCERS = [
   delta_statement_reducer,
   # Reduction of WHERE conditions
   where_condition_reduce,
+  # Reduction of SELECT column lists
+  select_reduce,
   # Reduction of expressions by evaluating them
   expression_reduce
   # Delta debugging on tokens
