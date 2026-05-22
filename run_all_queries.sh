@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 set -e
+start=$SECONDS
+trap 'echo ""; echo "--- TOTAL TIME TO RUN 20 QUERIES: $((SECONDS - start))s ---"' EXIT
 
 if [ -d /opt/reducer/queries ]; then
   cd /opt/reducer

@@ -14,11 +14,19 @@ def run_oracle(candidate_sql: str, oracle_script: str) -> bool:
     with open(candidate_path, "w", encoding="utf-8") as f:
       f.write(candidate_sql)
 
+    with open(oracle_script, "rb") as f:
+      oracle_bytes = f.read().replace(b"\r\n", b"\n")
+
+    oracle_copy = os.path.join(tmpdir, "test.sh")
+    with open(oracle_copy, "wb") as f:
+      f.write(oracle_bytes)
+    os.chmod(oracle_copy, 0o755)
+
     env = os.environ.copy()
     env["TEST_CASE_LOCATION"] = candidate_path
 
     result = subprocess.run(
-      ["bash", oracle_script],
+      ["bash", oracle_copy],
       cwd=tmpdir,
       env=env,
       stdout=subprocess.DEVNULL,
