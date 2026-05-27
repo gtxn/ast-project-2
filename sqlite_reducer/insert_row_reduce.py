@@ -1,18 +1,19 @@
 from sqlglot import exp
 from .utils import run_oracle, split_stmts, unsplit_stmts, parse_sql
 
-def _remove_join(tree, select_pos, join_idx):
+def _remove_insert_row(tree, insert_pos, row_idx):
     count = [-1]
     def fn(node):
         count[0] += 1
-        if count[0] == select_pos:
-            joins = list(node.args.get('joins') or [])
+        if count[0] == insert_pos:
             node = node.copy()
-            node.set('joins', joins[:join_idx] + joins[join_idx + 1:])
+            values = node.args.get('expression')
+            rows = list(values.expressions)
+            values.set('expressions', rows[:row_idx] + rows[row_idx + 1:])
         return node
     return tree.copy().transform(fn, copy=False).sql(dialect='sqlite')
 
-def join_reduce(sql: str, oracle_script: str) -> str:
+def insert_row_reduce(sql: str, oracle_script: str) -> str:
     stmts = split_stmts(sql)
 
     for i in range(len(stmts)):
@@ -27,13 +28,17 @@ def join_reduce(sql: str, oracle_script: str) -> str:
             candidates = [
                 (pos, node)
                 for pos, node in enumerate(tree.walk(bfs=False))
-                if isinstance(node, exp.Select) and node.args.get('joins')
+                if (
+                    isinstance(node, exp.Insert)
+                    and isinstance(node.args.get('expression'), exp.Values)
+                    and len(node.args['expression'].expressions) > 1
+                )
             ]
 
-            for select_pos, select_node in candidates:
-                joins = list(select_node.args.get('joins'))
-                for j in range(len(joins)):
-                    candidate_stmt = _remove_join(tree, select_pos, j)
+            for insert_pos, insert_node in candidates:
+                rows = list(insert_node.args['expression'].expressions)
+                for j in range(len(rows)):
+                    candidate_stmt = _remove_insert_row(tree, insert_pos, j)
                     candidate_parts = stmts[:i] + [candidate_stmt] + stmts[i + 1:]
                     if run_oracle(unsplit_stmts(candidate_parts), oracle_script):
                         stmts[i] = candidate_stmt

@@ -65,7 +65,7 @@ def delta_debug(parts: list[str], oracle_script: str, delimitter:str=' ') -> lis
 
 # Parse SQL
 def parse_sql(sql_stmt: str) -> list:
-  statements = parse(sql_stmt)
+  statements = parse(sql_stmt, read="sqlite")
   return statements
   
 # Get tables involved in the statement

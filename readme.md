@@ -16,7 +16,6 @@ docker run --rm \
 
 ## Run ALL queries with Docker
 ```
-docker build --pull --platform linux/amd64 -t ast-reducer .
 docker run --rm \
   --platform linux/amd64 \
   -v "$PWD/queries:/opt/reducer/queries" \

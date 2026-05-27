@@ -11,6 +11,8 @@ from sqlite_reducer.select_reduce import select_reduce
 from sqlite_reducer.with_reduce import with_reduce
 from sqlite_reducer.join_reduce import join_reduce
 from sqlite_reducer.case_reduce import case_reduce
+from sqlite_reducer.insert_row_reduce import insert_row_reduce
+from sqlite_reducer.table_column_reduce import table_column_reduce
 
 # Statement goes through these reducers in order
 REDUCERS = [
@@ -18,7 +20,7 @@ REDUCERS = [
   statement_reducer,
   # Delta debugging on remaining statements
   delta_statement_reducer,
-  # Reduce CTEs in WITH clauses
+  # Reduce in WITH clauses
   with_reduce,
   # Removal of individual JOIN legs
   join_reduce,
@@ -29,7 +31,11 @@ REDUCERS = [
   # Removal of CASE WHEN branches
   case_reduce,
   # Reduction of expressions by evaluating them
-  expression_reduce
+  expression_reduce,
+  # Removal of unnecessary INSERT rows
+  insert_row_reduce,
+  # Removal of table columns and matching INSERT values
+  table_column_reduce,
   # Delta debugging on tokens
   # delta_token_reducer
 ]

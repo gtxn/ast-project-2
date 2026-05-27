@@ -1,2 +1,4 @@
-CREATE TABLE F (p INTEGER NOT NULL NULL NOT NULL, i INTEGER);
-INSERT INTO F SELECT * FROM (VALUES ((NOT FALSE), FALSE), (NULL, (NOT (NOT TRUE)))) AS L WHERE (((((-(CAST((110) AS REAL) / (((-(-150)) * ((247 * (91 * (-47))) + (-86)))))))) = ((((((CAST(24 AS REAL) / (((89) * (58)))))) * (-(-(CAST((193 + 223) AS REAL) / (-(CAST(222 AS REAL) / 219)))))) * (34 * 70)) * (((((CAST((((-202))) AS REAL) / (52)) - (-(228 + (-104)))) * (-24)))))) = (FALSE <> (66 <> 8)))
+CREATE TABLE t0 (c1 INTEGER, c3 TEXT);
+CREATE INDEX i8 ON t0(c1) WHERE (c3 < 'default');
+INSERT INTO t0 (c1, c3) VALUES (1, 'x');
+SELECT 1 FROM t0 WHERE c1 IN (SELECT c1 FROM t0)

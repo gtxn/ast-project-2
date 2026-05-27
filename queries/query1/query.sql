@@ -1,2 +1,2 @@
 CREATE TABLE F (p BOOLEAN NOT NULL NULL NOT NULL, i BOOLEAN);
-INSERT INTO F SELECT * FROM (VALUES ((NOT false), false), (NULL, (NOT FALSE))) AS L WHERE (((+(+(-((+110) / (+-158475750))))) = ((((+(+(24 / (+((+89) * (+58)))))) * (-(-(416 / (-(222 / 219)))))) * 2380) * (+(+((((+(+-202)) / (+52)) - -124) * -24))))) = (false <> TRUE))
+INSERT INTO F SELECT * FROM (VALUES (TRUE, FALSE), (NULL, TRUE)) AS L WHERE (((((-(110 / -158475750)))) = ((((((24 / 5162))) * -410.37837837837833) * 2380) * -2882.7692307692305)) = TRUE)
