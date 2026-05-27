@@ -28,13 +28,14 @@ def build_or_chain(disjuncts):
     return result
 
 
-def apply_conjuncts(tree, conjuncts):
+def _apply_conjuncts(tree, where_idx, conjuncts):
     tree_copy = tree.copy()
-    where_copy = tree_copy.find(exp.Where)
+    wheres = list(tree_copy.find_all(exp.Where))
+    target = wheres[where_idx]
     if conjuncts:
-        where_copy.set('this', build_and_chain(conjuncts))
+        target.set('this', build_and_chain(conjuncts))
     else:
-        where_copy.pop()
+        target.pop()
     return tree_copy.sql(dialect='sqlite')
 
 
@@ -49,40 +50,44 @@ def where_condition_reduce(sql: str, oracle_script: str) -> str:
             if not parsed:
                 break
             tree = parsed[0]
-            where = tree.find(exp.Where)
-            if where is None:
-                break
 
-            conjuncts = get_conjuncts(where.this)
+            wheres = list(tree.find_all(exp.Where))
+            made_progress = False
 
-            # Removing AND conjuncts
-            for j in range(len(conjuncts)):
-                candidate_conjuncts = conjuncts[:j] + conjuncts[j + 1:]
-                candidate_stmt = apply_conjuncts(tree, candidate_conjuncts)
-                candidate_parts = stmts[:i] + [candidate_stmt] + stmts[i + 1:]
-                if run_oracle(unsplit_stmts(candidate_parts), oracle_script):
-                    stmts[i] = candidate_stmt
-                    break
+            for where_idx, where in enumerate(wheres):
+                conjuncts = get_conjuncts(where.this)
 
-            if stmts[i] != prev:
-                continue
-
-            # Removing OR disjuncts within each conjunct
-            for j, conjunct in enumerate(conjuncts):
-                disjuncts = get_disjuncts(conjunct)
-                if len(disjuncts) <= 1:
-                    continue
-                for k in range(len(disjuncts)):
-                    candidate_disjuncts = disjuncts[:k] + disjuncts[k + 1:]
-                    new_conjunct = build_or_chain(candidate_disjuncts)
-                    candidate_stmt = apply_conjuncts(
-                        tree, conjuncts[:j] + [new_conjunct] + conjuncts[j + 1:]
-                    )
+                for j in range(len(conjuncts)):
+                    candidate_conjuncts = conjuncts[:j] + conjuncts[j + 1:]
+                    candidate_stmt = _apply_conjuncts(tree, where_idx, candidate_conjuncts)
                     candidate_parts = stmts[:i] + [candidate_stmt] + stmts[i + 1:]
                     if run_oracle(unsplit_stmts(candidate_parts), oracle_script):
                         stmts[i] = candidate_stmt
+                        made_progress = True
                         break
-                if stmts[i] != prev:
+
+                if made_progress:
+                    break
+
+                for j, conjunct in enumerate(conjuncts):
+                    disjuncts = get_disjuncts(conjunct)
+                    if len(disjuncts) <= 1:
+                        continue
+                    for k in range(len(disjuncts)):
+                        candidate_disjuncts = disjuncts[:k] + disjuncts[k + 1:]
+                        new_conjunct = build_or_chain(candidate_disjuncts)
+                        candidate_stmt = _apply_conjuncts(
+                            tree, where_idx, conjuncts[:j] + [new_conjunct] + conjuncts[j + 1:]
+                        )
+                        candidate_parts = stmts[:i] + [candidate_stmt] + stmts[i + 1:]
+                        if run_oracle(unsplit_stmts(candidate_parts), oracle_script):
+                            stmts[i] = candidate_stmt
+                            made_progress = True
+                            break
+                    if made_progress:
+                        break
+
+                if made_progress:
                     break
 
     return unsplit_stmts(stmts)

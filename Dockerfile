@@ -22,7 +22,8 @@ ENV PYTHONPATH=/opt/reducer
 
 RUN printf '#!/bin/sh\nexec python3 /opt/reducer/reducer.py "$@"\n' \
     > /usr/bin/reducer && chmod +x /usr/bin/reducer
-RUN chmod +x /opt/reducer/run_all_queries.sh && \
+RUN sed -i 's/\r//' /opt/reducer/run_all_queries.sh && \
+    chmod +x /opt/reducer/run_all_queries.sh && \
     ln -sf /opt/reducer/run_all_queries.sh /usr/bin/run-all-queries
 
 ENTRYPOINT ["/usr/bin/reducer"]

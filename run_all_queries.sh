@@ -30,6 +30,64 @@ for i in {1..20}; do
 done
 
 echo ""
+echo "--- QUERY SUMMARY ---"
+python3 - "$metrics_file" <<'PY'
+import csv
+import sys
+from collections import OrderedDict
+from sqlglot.tokens import Tokenizer
+
+def count_tokens(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return len(Tokenizer().tokenize(f.read()))
+    except FileNotFoundError:
+        return 0
+
+metrics_file = sys.argv[1]
+queries = OrderedDict()
+
+with open(metrics_file, encoding="utf-8", newline="") as f:
+    for row in csv.DictReader(f):
+        q = row["query"]
+        queries.setdefault(q, {"time": 0.0})
+        queries[q]["time"] += float(row["time"])
+
+print(f"{'Query':<10} {'Time (s)':>10} {'Original Tokens':>16} {'Tokens After':>14} {'Reduction':>12}")
+print(f"{'-'*10} {'-'*10} {'-'*16} {'-'*14} {'-'*12}")
+
+total_time = 0.0
+total_before = 0
+total_after = 0
+
+for q, s in queries.items():
+    base = f"queries/{q}"
+    before = count_tokens(f"{base}/original_test.sql")
+    after = count_tokens(f"{base}/query.sql")
+    pct = (before - after) / before * 100 if before else 0.0
+    total_time += s["time"]
+    total_before += before
+    total_after += after
+    print(
+        f"{q:<10} "
+        f"{s['time']:>9.2f}s "
+        f"{before:>16} "
+        f"{after:>14} "
+        f"{pct:>11.1f}%"
+    )
+
+total_pct = (total_before - total_after) / total_before * 100 if total_before else 0.0
+print(f"{'-'*10} {'-'*10} {'-'*16} {'-'*14} {'-'*12}")
+print(
+    f"{'Total':<10} "
+    f"{total_time:>9.2f}s "
+    f"{total_before:>16} "
+    f"{total_after:>14} "
+    f"{total_pct:>11.1f}%"
+)
+PY
+
+echo ""
 echo "--- REDUCER TOTALS ---"
 python3 - "$metrics_file" <<'PY'
 import csv

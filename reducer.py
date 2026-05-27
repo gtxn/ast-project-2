@@ -15,6 +15,8 @@ from sqlite_reducer.join_reduce import join_reduce
 from sqlite_reducer.case_reduce import case_reduce
 from sqlite_reducer.insert_row_reduce import insert_row_reduce
 from sqlite_reducer.table_column_reduce import table_column_reduce
+from sqlite_reducer.order_by_reduce import order_by_reduce
+from sqlite_reducer.column_def_reduce import column_def_reduce
 
 # Statement goes through these reducers in order
 REDUCERS = [
@@ -36,6 +38,10 @@ REDUCERS = [
   insert_row_reduce,
   # Removal of table columns and matching INSERT values
   table_column_reduce,
+  # Removal of order by terms
+  order_by_reduce,
+  # Removal of column constraints and type annotations
+  column_def_reduce,
   # Reduction of expressions by evaluating them
   expression_reduce,
   # Delta debugging on tokens
