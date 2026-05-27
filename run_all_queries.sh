@@ -18,9 +18,10 @@ for i in {1..20}; do
   echo "Running query$i ..."
   if (
     cd "$query_dir"
+    cp original_test.sql query.sql
     REDUCER_METRICS_FILE="$metrics_file" \
     REDUCER_QUERY_NAME="query$i" \
-      python3 ../../reducer.py --query original_test.sql --test test.sh
+      python3 ../../reducer.py --query query.sql --test test.sh
   ); then
     echo "--- query$i time: $((SECONDS - query_start))s ---"
   else

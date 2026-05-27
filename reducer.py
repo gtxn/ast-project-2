@@ -117,7 +117,7 @@ def main():
   elapsed = time.time() - start_time
   final_tokens = len(tokenize_sql(current_sql))
 
-  with open("query.sql", "w", encoding="utf-8") as f:
+  with open(args.query, "w", encoding="utf-8") as f:
     f.write(current_sql)
 
   # print('--- NEW SQL ---')
